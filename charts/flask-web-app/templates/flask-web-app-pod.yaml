@@ -15,8 +15,8 @@ spec:
         app: flask-web-app
     spec:
       containers:
-      - name: flask-web-app-container
-        image: 
+      - name: flask-web-app-image
+        image: avl4kul/flask-web-app:latest
         imagePullPolicy: Always
       nodeSelector:
         workerNode: "yes"
