@@ -1,8 +1,11 @@
 import os
 from flask import Flask
 from datetime import datetime
+from influxdb import InfluxDBClient
 
 app = Flask(__name__)
+
+app.debug = True
 
 @app.route('/')
 def hello_thesis():
