@@ -21,6 +21,7 @@ def list_dbs():
 @app.route('/post-influxdb/<float:current_value>')
 def post_new_val(current_value):
     client = InfluxDBClient(host='10.98.182.163', port=8086)
+    client.switch_database("flask-data")
     time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
     json_body = [{
         "measurement": "sampleEvents",
@@ -39,5 +40,6 @@ def post_new_val(current_value):
 @app.route('/get-vals')
 def get_values():
     client = InfluxDBClient(host='10.98.182.163', port=8086)    
+    client.switch_database("flask-data")
     results = client.query('SELECT * FROM "flask-data"."autogen"."sampleEvents" WHERE time > now() - 4d')
     return results.raw
