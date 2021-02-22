@@ -18,18 +18,18 @@ spec:
       - name: flask-web-app-container
         image: avl4kul/flask-web-app:latest
         imagePullPolicy: Always
-      env:
-        - name: CURRENT_NODE_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: spec.nodeName
-        - name: CURRENT_POD_NAME
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.name
-        - name: CURRENT_POD_NAMESPACE
-          valueFrom:
-            fieldRef:
-              fieldPath: metadata.namespace
+        env:
+          - name: CURRENT_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: CURRENT_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: CURRENT_POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
       nodeSelector:
         workerNode: "yes"
