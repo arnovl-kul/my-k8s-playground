@@ -15,11 +15,13 @@ def hello_thesis():
 def create_influx():
     client = InfluxDBClient(host='10.98.182.163', port=8086)  # Hard coded, could be improved
     client.create_database('flask-data')
+    return "done"
 
 @app.route('/list-influx-dbs')
 def list_dbs():
     client = InfluxDBClient(host='10.98.182.163', port=8086)
-    return client.get_list_database()
+    print(client.get_list_database())
+    return "done"
 
 @app.route('/post-influxdb/<float:current_value>')
 def post_new_val(current_value):
@@ -45,4 +47,5 @@ def get_values():
     client = InfluxDBClient(host='10.98.182.163', port=8086)    
     client.switch_database("flask-data")
     results = client.query('SELECT * FROM "flask-data"."autogen"."sampleEvents" WHERE time > now() - 4d')
+    print results.raw
     return results.raw
