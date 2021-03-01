@@ -47,5 +47,5 @@ def get_values():
     client = InfluxDBClient(host='10.98.182.163', port=8086)    
     client.switch_database("flask-data")
     results = client.query('SELECT * FROM "flask-data"."autogen"."sampleEvents" WHERE time > now() - 4d')
-    print results.raw
+    print(results.raw)
     return results.raw
