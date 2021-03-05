@@ -18,6 +18,11 @@ spec:
       - name: flask-web-app-container
         image: avl4kul/flask-web-app:latest
         imagePullPolicy: Always
+        resources:
+          requests:
+            cpu: 500m
+          limits:
+            cpu: 500m
         ports:
           - containerPort: 5000
         env:

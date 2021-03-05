@@ -16,12 +16,14 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-l", "--lhost",    action='store', help="Locust web endpoint")
 parser.add_argument("-i", "--dbip",     action='store', help="IP address of the influx-db")
 parser.add_argument("-p", "--dbport",   action='store', help="Port of influx-db")
+parser.add_argument("-s", "--speed",    action='store', help="Speed at which to collect the metrics")
 
 args = parser.parse_args()
 
 LOCUST_HOST = args.lhost
 INFLUXDB_HOST = args.dbip
 INFLUXDB_PORT = args.dbport
+COLLECT_SPEED = args.speed
 
 class Collector:
     def __init__(self, loop, session):
@@ -112,7 +114,7 @@ async def _constant_pooling(loop):
             print(type(err))
             print(err)
             await asyncio.sleep(5, loop=loop)
-        await asyncio.sleep(3, loop=loop)
+        await asyncio.sleep(COLLECT_SPEED, loop=loop)
 
 def main():
     loop = asyncio.get_event_loop()
