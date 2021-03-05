@@ -2,7 +2,7 @@ from locust import HttpUser, between, task
 import random
 
 class WebsiteUser(HttpUser):
-    wait_time = between(5,15)
+    wait_time = between(1,5)
 
     @task
     def new_value(self):

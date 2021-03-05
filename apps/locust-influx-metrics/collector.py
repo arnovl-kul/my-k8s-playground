@@ -1,5 +1,6 @@
 import asyncio
-import socker
+import socket
+import argparse
 import json
 import time
 import aiohttp
@@ -26,13 +27,14 @@ class Collector:
     def __init__(self, loop, session):
         self.loop = loop
         self.session = session
-        self.sock = socker.socket()
+        self.sock = socket.socket()
         self.client = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT, timeout=5)
         self.client.switch_database("flask-data")
 
         print("Checking connection to influxdb... wait max 15 seconds")
         try:
-            v = client.ping()
+            v = self.client.ping()
+            print('Succesfully pinged InfluxDB')
         except:
             exit("Problem with connection to Influxdb, check ip and port, aborting")
 
@@ -42,12 +44,13 @@ class Collector:
             "measurement": "responseData",
             "time": time,
             "fields": {
-                "userCount": count,
-                "rps": rps,
-                "medianRespTime": medianRespTime
+                "userCount": userCount,
+                "rps": float(rps),
+                "medianRespTime": float(medianRespTime)
             }
         }]
-        client.write_points(json_body)
+        print('Pushing: uc: ' + str(userCount) + ' rps: ' + str(rps) + ' rt: ' + str(medianRespTime))
+        self.client.write_points(json_body)
 
     def push_metrics_user_count(self, count):
         time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -58,7 +61,7 @@ class Collector:
                 "userCount": count
             }
         }]
-        client.write_points(json_body)
+        self.client.write_points(json_body)
 
     def push_metrics_rps(self, rps):
         time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -69,10 +72,11 @@ class Collector:
                 "rps": count
             }
         }]
-        client.write_points(json_body)
+        self.client.write_points(json_body)
 
     async def fetch(self, url, **kwargs):
         async with self.session.get(url, **kwargs) as response:
+            print('Fetching: ' + url + '  reps: ' + str(response.status))
             status = response.status
             assert status == 200
             data = await response.text()
@@ -81,14 +85,18 @@ class Collector:
     async def __call__(self):
         resp = await self.fetch(LOCUST_HOST+'/stats/requests')
         user_count = json.loads(resp)['user_count']
-        status = json.load(resp)['state']
+        status = json.loads(resp)['state']
 
-        if (status == "running" and users != 0):
-            rps = json.loads(resp)['total_rps']
-        else:
-            rps = 0
-
+        rps = json.loads(resp)['total_rps']
+        
         median = json.loads(resp)['current_response_time_percentile_50']
+
+        if median is None:
+            median = 0
+        if rps is None:
+            rps = 0
+        if user_count is None:
+            user_count = 0
 
         self.push_current_metrics(user_count, rps, median)
 
@@ -99,7 +107,10 @@ async def _constant_pooling(loop):
     while True:
         try:
             await a()
-        except:
+        except Exception as err:
+            print('Error in processing')
+            print(type(err))
+            print(err)
             await asyncio.sleep(5, loop=loop)
         await asyncio.sleep(3, loop=loop)
 
