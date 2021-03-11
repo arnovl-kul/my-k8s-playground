@@ -70,8 +70,8 @@ def set_user_count(count):
 
     if (r.status_code == 200):
         time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
-        json_body = [{
-            "measurement": "userCount",
+		json_body = [{
+			"measurement": "userCount",
             "time": time,
             "fields": {
                 "userCount": count
@@ -160,12 +160,12 @@ def generate_load():
 
 	time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
     json_body = [{
-        "measurement": "userCount",
-        "time": time,
-        "fields": {
-            "userCount": 0
-        }
-    }]
+		"measurement": "userCount",
+		"time": time,
+		"fields": {
+			"userCount": 0
+		}
+	}]
     client.write_points(json_body)
 
 
@@ -173,7 +173,7 @@ def generate_load():
 
     for trace in traces:
 	for _ in range(trace['repeat']):
-            for segment in trace['trace']:
+        for segment in trace['trace']:
 	        process_segment(segment)
 		last=segment['endCount']
 
