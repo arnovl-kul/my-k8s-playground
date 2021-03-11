@@ -1,4 +1,5 @@
 import kubernetes
+from datetime import datetime
 from influxdb import InfluxDBClient
 
 INFLUXDB_HOST = '172.19.133.29'
@@ -21,17 +22,15 @@ for pod_info in consumer_pod_list:
                     FROM "k8s"."default"."cpu/usage_rate" \
                     WHERE "pod_name" = \'' + pod_info[0] + '\' \
                         AND "namespace_name" = \'gold\' \
-                        AND time > now() - 1h'   
+                        AND time > now() - 10m'   
     mem_query = 'SELECT "pod_name", "value" \
                     FROM "k8s"."default"."cpu/usage" \
                     WHERE "pod_name" = \'' + pod_info[0] + '\' \
                         AND "namespace_name" = \'gold\' \
-                        AND time > now() - 1h'   
+                        AND time > now() - 10m'   
     req_rate_query = 'SELECT "userCount", "rps", "medianRespTime" \
                         FROM "gold-app-data"."autogen"."responseData" \
-                        WHERE "pod_name" = \'' + pod_info[0] + '\' \
-                            AND "namespace_name" = \'gold\' \
-                            AND time > now() - 1h'   
+                        WHERE time > now() - 10m'   
 
     influxClient.switch_database("k8s")
 
@@ -42,22 +41,22 @@ for pod_info in consumer_pod_list:
     list_mem_usage = [c[2] for c in results.raw['series'][0]['values']]
 
     influxClient.switch_database("gold-app-data")
-
-    results = influxClient.query(mem_query)
+    results = influxClient.query(req_rate_query)
     list_req_rate = [c[2] for c in results.raw['series'][0]['values']]
 
     avg_cpu_p_usage = (sum(list_cpu_usage) / len(list_cpu_usage)) / int(pod_info[1][:-1])
     avg_mem_usage = sum(list_mem_usage) / len(list_mem_usage)
     avg_req_rate = sum(list_req_rate) / len(list_req_rate)
 
-    basic_ideal_throughput = avg_cpu_p_usage / ( (avg_req_rate * 3600) * (int(pod_info[1][:-1]) / total_cpu_cores) )
+
+    basic_ideal_throughput = avg_cpu_p_usage / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) )
 
     influxClient.switch_database("gold-app-data")
 
     time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
     json_body = [{
         "measurement": "idealThroughput",
-        "time": time,
+        "time": time[0],
         "tags": {
             "podName": pod_info[0],
             "cpu": pod_info[1]
@@ -68,4 +67,7 @@ for pod_info in consumer_pod_list:
     }]
     influxClient.write_points(json_body)
 
-    print(pod_info[0] + "(" + pod_info[1] + ") : " + basic_ideal_throughput)
+    print("Avg cpu usage: " + str(avg_cpu_p_usage))
+    print("Percentage of total: " + str(int(pod_info[1][:-1])/total_cpu_cores))
+    print("Req rate: " + str(avg_req_rate))
+    print(pod_info[0] + "(" + pod_info[1] + ") : " + str(basic_ideal_throughput))

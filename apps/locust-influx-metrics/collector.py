@@ -117,7 +117,7 @@ async def _constant_pooling(loop):
             print(type(err))
             print(err)
             await asyncio.sleep(5, loop=loop)
-        await asyncio.sleep(COLLECT_SPEED, loop=loop)
+        await asyncio.sleep(int(COLLECT_SPEED), loop=loop)
 
 def main():
     loop = asyncio.get_event_loop()
