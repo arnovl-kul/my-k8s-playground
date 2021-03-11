@@ -22,6 +22,26 @@ total_cpu_cores = sum([ int(pod_info[1][:-1]) for pod_info in consumer_pod_list]
 
 req_rate = 0
 
+def ru_strategy():
+    req_rate*60
+    different_configs = set([s[1] for s in consumer_pod_list])
+    r = sum([((req_rate*60)/len(different_configs)) * calculate_workload_complexity() * get_latest_ideal_throughput_value(s[1]) for s in consumer_pod_list]) / different_configs
+    return r
+
+
+def calculate_workload_complexity():
+    return sum(list_cpu_usage_server) / sum(list_cpu_usage_expected)
+        
+
+def get_latest_ideal_throughput_value(cpu_limit):
+    it_query = 'SELECT "throughput" \
+                        FROM "gold-app-data"."autogen"."idealThroughput" \
+                        WHERE "cpu" = \''+ cpu_limit + '\' \
+                        ORDER BY time DESC LIMIT 3'
+    influxClient.switch_database("gold-app-data")
+    results = influxClient.query(it_query)
+    return sum([c[1] for c in results.raw['series'][0]['values']]) / len([c[1] for c in results.raw['series'][0]['values']])
+
 for pod_info in consumer_pod_list:
     cpu_query = 'SELECT "pod_name", "value" \
                         FROM "k8s"."default"."cpu/usage_rate" \
@@ -54,31 +74,11 @@ for pod_info in consumer_pod_list:
     req_rate = avg_req_rate
 
     ideal_throughput = get_latest_ideal_throughput_value(pod_info[1])
-    
+
     cpu_usage_expected = avg_req_rate*60*(int(pod_info[1][:-1]) / total_cpu_cores) * ideal_throughput
     
     list_cpu_usage_server.append(avg_cpu_p_usage)
     list_cpu_usage_expected.append(cpu_usage_expected)
-
-def ru_strategy():
-    req_rate*60
-    different_configs = set([s[1] for s in consumer_pod_list])
-    r = sum([((req_rate*60)/len(different_configs)) * calculate_workload_complexity() * get_latest_ideal_throughput_value(s[1]) for s in consumer_pod_list]) / different_configs
-    return r
-
-
-def calculate_workload_complexity():
-    return sum(list_cpu_usage_server) / sum(list_cpu_usage_expected)
-        
-
-def get_latest_ideal_throughput_value(cpu_limit):
-    it_query = 'SELECT "throughput" \
-                        FROM "gold-app-data"."autogen"."idealThroughput" \
-                        WHERE "cpu" = \''+ cpu_limit + '\' \
-                        ORDER BY time DESC LIMIT 3'
-    influxClient.switch_database("gold-app-data")
-    results = influxClient.query(it_query)
-    return sum([c[1] for c in results.raw['series'][0]['values']]) / len([c[1] for c in results.raw['series'][0]['values']])
 
 print("Workload complexity: " + str(calculate_workload_complexity()))
 print("Number of different configs: " + str(len(set([s[1] for s in consumer_pod_list]))))
