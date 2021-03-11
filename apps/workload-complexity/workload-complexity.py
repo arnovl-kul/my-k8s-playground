@@ -25,7 +25,7 @@ req_rate = 0
 def ru_strategy():
     req_rate*60
     different_configs = set([s[1] for s in consumer_pod_list])
-    r = sum([((req_rate*60)/len(different_configs)) * calculate_workload_complexity() * get_latest_ideal_throughput_value(s[1]) for s in consumer_pod_list]) / different_configs
+    r = sum([((req_rate*60)/len(different_configs)) * calculate_workload_complexity() * get_latest_ideal_throughput_value(s[1]) for s in consumer_pod_list]) / len(different_configs)
     return r
 
 
