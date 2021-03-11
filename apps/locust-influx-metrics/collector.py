@@ -17,6 +17,7 @@ parser.add_argument("-l", "--lhost",    action='store', help="Locust web endpoin
 parser.add_argument("-i", "--dbip",     action='store', help="IP address of the influx-db")
 parser.add_argument("-p", "--dbport",   action='store', help="Port of influx-db")
 parser.add_argument("-s", "--speed",    action='store', help="Speed at which to collect the metrics")
+parser.add_argument("-d", "--influxdb", action='store', help="The database in which to store the metrics")
 
 args = parser.parse_args()
 
@@ -24,6 +25,7 @@ LOCUST_HOST = args.lhost
 INFLUXDB_HOST = args.dbip
 INFLUXDB_PORT = args.dbport
 COLLECT_SPEED = args.speed
+DATABASE = args.influxdb
 
 class Collector:
     def __init__(self, loop, session):
@@ -31,7 +33,7 @@ class Collector:
         self.session = session
         self.sock = socket.socket()
         self.client = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT, timeout=5)
-        self.client.switch_database("flask-data")
+        self.client.switch_database(DATABASE)
 
         print("Checking connection to influxdb... wait max 15 seconds")
         try:
@@ -100,6 +102,7 @@ class Collector:
         if user_count is None:
             user_count = 0
 
+        # Should only push if rps > 0 ??
         self.push_current_metrics(user_count, rps, median)
 
 async def _constant_pooling(loop):
