@@ -130,8 +130,8 @@ def process_segment(trace):
 		times = end_count-initial_count
 		delay = duration/times
 
-    for t in range(times+1):
-        set_user_count(t+initial_count)
+	for t in range(times+1):
+		set_user_count(t+initial_count)
 	time.sleep(delay)
 	# set_user_count(end_count)
 
