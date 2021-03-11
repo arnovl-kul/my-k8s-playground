@@ -52,6 +52,7 @@ try:
     v = client.ping()
 except:
     exit("Problem with connection to Influxdb, check ip and port, aborting")
+client.switch_database("gold-app-data")
 
 
 def stop_load():
@@ -129,10 +130,10 @@ def process_segment(trace):
 		times = end_count-initial_count
 		delay = duration/times
 
-		for t in range(times+1):
-			set_user_count(t+initial_count)
-			time.sleep(delay)
-		# set_user_count(end_count)
+    for t in range(times+1):
+        set_user_count(t+initial_count)
+	time.sleep(delay)
+	# set_user_count(end_count)
 
 	elif(segment_type == 'decreasing'):
 		times = initial_count-end_count
@@ -168,16 +169,16 @@ def generate_load():
     client.write_points(json_body)
 
 
-	last=None
+    last=None
 
-	for trace in traces:
-		for _ in range(trace['repeat']):
-			for segment in trace['trace']:
-				process_segment(segment)
-				last=segment['endCount']
+    for trace in traces:
+	for _ in range(trace['repeat']):
+            for segment in trace['trace']:
+	        process_segment(segment)
+		last=segment['endCount']
 
 
-	time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+    time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
     json_body = [{
         "measurement": "userCount",
         "time": time,
@@ -186,8 +187,8 @@ def generate_load():
         }
     }]
     client.write_points(json_body)
-
-	stop_load()			
+    
+    stop_load()			
 
 
 if(command=='start'):

@@ -38,8 +38,8 @@ class MyUser(HttpUser):
 
     @events.request_success.add_listener
     def hook_request_success(request_type, name, response_time, response_length, **kw):
-        print("DONE# type=" + str(request_type) + ", name=" str(name) \
-                            + ", response_time=" + str(response_time) + ", response_length=" + str(response_length)))
+        print("DONE# type=" + str(request_type) + ", name=" + str(name) \
+                            + ", response_time=" + str(response_time) + ", response_length=" + str(response_length))
         # If Grapĥite is used
         # data_latency="%s %d %d\n" % ("performance." + name.replace('.', '-')+'.latency', response_time,  time.time())
         #MyUser.sock.send(data_latency.encode())
