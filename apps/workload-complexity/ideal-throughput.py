@@ -28,7 +28,7 @@ def ideal_throughput_current():
                             AND "namespace_name" = \'gold\' \
                             AND time > now() - 10m'   
         mem_query = 'SELECT "pod_name", "value" \
-                        FROM "k8s"."default"."cpu/usage" \
+                        FROM "k8s"."default"."mem/usage" \
                         WHERE "pod_name" = \'' + pod_info[0] + '\' \
                             AND "namespace_name" = \'gold\' \
                             AND time > now() - 10m'   
