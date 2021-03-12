@@ -5,6 +5,9 @@ from influxdb import InfluxDBClient
 INFLUXDB_HOST = '172.19.133.29'
 INFLUXDB_PORT = 30421
 
+def normalize_list(list):
+    return [ (s - min(lis)) / (max(list) - min(list)) for s in list]
+
 def ideal_throughput_current():
     influxClient = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT) 
 
@@ -40,8 +43,10 @@ def ideal_throughput_current():
 
         results = influxClient.query(mem_query)
         list_mem_usage = [c[2] for c in results.raw['series'][0]['values']]
+        list_mem_usage = normalize_list(list_mem_usage)
 
         influxClient.switch_database("gold-app-data")
+        
         results = influxClient.query(req_rate_query)
         list_req_rate = [c[2] for c in results.raw['series'][0]['values']]
 
@@ -49,8 +54,9 @@ def ideal_throughput_current():
         avg_mem_usage = sum(list_mem_usage) / len(list_mem_usage)
         avg_req_rate = sum(list_req_rate) / len(list_req_rate)
 
-
         basic_ideal_throughput = avg_cpu_p_usage / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) )
+
+        mem_ideal_throughput = [ s / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) for s in [avg_mem_usage, avg_cpu_p_usage]]
 
         influxClient.switch_database("gold-app-data")
 
@@ -63,7 +69,9 @@ def ideal_throughput_current():
                 "cpu": pod_info[1]
             },
             "fields": {
-                "throughput": basic_ideal_throughput
+                "basic-throughput": basic_ideal_throughput,
+                "extended-throughput-mem": mem_ideal_throught[0],
+                "extended-throughput-cpu": mem_ideal_throught[1]
             }
         }]
         influxClient.write_points(json_body)
@@ -71,6 +79,8 @@ def ideal_throughput_current():
         print("Avg cpu usage: " + str(avg_cpu_p_usage))
         print("Percentage of total: " + str(int(pod_info[1][:-1])/total_cpu_cores))
         print("Req rate: " + str(avg_req_rate))
-        print(pod_info[0] + "(" + pod_info[1] + ") : " + str(basic_ideal_throughput))
+        print(pod_info[0] + "(" + pod_info[1] + ") : basic: " + str(basic_ideal_throughput))
+        print(pod_info[0] + "(" + pod_info[1] + ") : mem: " + str(basic_ideal_throughput))
+        print(pod_info[0] + "(" + pod_info[1] + ") : cpu: " + str(basic_ideal_throughput))
 
 ideal_throughput_current()
