@@ -31,8 +31,8 @@ def ru_strategy():
     r = sum([((req_rate*60)/len(different_configs)) * calculate_workload_complexity() * get_latest_ideal_throughput_value(s[1]) for s in consumer_pod_list]) / len(different_configs)
     return r
 
-def normalize_list(list):
-    return [ (s - min(lis)) / (max(list) - min(list)) for s in list]
+def normalize_list(list_t):
+    return [ (s - min(list_t)) / (max(list_t) - min(list_t)) for s in list_t]
 
 def calculate_workload_complexity():
     return sum(list_cpu_usage_server) / sum(list_cpu_usage_expected)
@@ -119,20 +119,22 @@ print("Workload complexity paper: " + str(workload_complex))
 
 # Actual/Expected from every pod in the current configuration
 workload_complex_mem = (sum(list_cpu_usage_server) / sum(list_cpu_usage_expected_n)) + (sum(list_mem_usage_server_n) / sum(list_mem_usage_expected_n))
-print("Workload complexity new: " + workload_complex_mem)
+print("Workload complexity new: " + str(workload_complex_mem))
 
 print("Number of different configs: " + str(len(set([s[1] for s in consumer_pod_list]))))
 
 def ru_strategy():
     different_configs = set([s[1] for s in consumer_pod_list])
-    r = sum([((req_rate*60)/len(different_configs)) * calculate_workload_complexity() * get_latest_ideal_throughput_value(s[1]) for s in consumer_pod_list]) / len(different_configs)
+    r = sum([((avg_req_rate*60)/len(different_configs)) * calculate_workload_complexity() * get_latest_ideal_throughput_value(s[1]) for s in consumer_pod_list]) / len(different_configs)
     return r
 
 print("RU_Strategy old: " + str(ru_strategy()))
 
 different_configs = set([s[1] for s in consumer_pod_list])
 
-ru_per_cpu_limit = [[(avg_req_rate*ideal_throughput_list_per_limit[s][0])/workload_complex_mem, (avg_req_rate*ideal_throughput_list_per_limit[s])/workload_complex_mem] for s in different_configs]
-ru_strategy_n = [sum([t[0] for t in a])/len(a), sum([t[1] for t in a])]/len(a)]
+print(ideal_throughput_list_per_limit)
 
-print("RU_Strategy new: " + str(ru_strategy()))
+ru_per_cpu_limit = [[(avg_req_rate*ideal_throughput_list_per_limit[s][0])/workload_complex_mem, (avg_req_rate*ideal_throughput_list_per_limit[s][1])/workload_complex_mem] for s in different_configs]
+ru_strategy_n = [sum([t[0] for t in ru_per_cpu_limit])/len(ru_per_cpu_limit), sum([t[1] for t in ru_per_cpu_limit])/len(ru_per_cpu_limit)]
+
+print("RU_Strategy new: " + str(ru_strategy_n))
