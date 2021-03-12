@@ -5,8 +5,8 @@ from influxdb import InfluxDBClient
 INFLUXDB_HOST = '172.19.133.29'
 INFLUXDB_PORT = 30421
 
-def normalize_list(list):
-    return [ (s - min(lis)) / (max(list) - min(list)) for s in list]
+def normalize_list(list_t):
+    return [ (s - min(list_t)) / (max(list_t) - min(list_t)) for s in list_t]
 
 def ideal_throughput_current():
     influxClient = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT) 
@@ -28,7 +28,7 @@ def ideal_throughput_current():
                             AND "namespace_name" = \'gold\' \
                             AND time > now() - 10m'   
         mem_query = 'SELECT "pod_name", "value" \
-                        FROM "k8s"."default"."cpu/usage" \
+                        FROM "k8s"."default"."memory/usage" \
                         WHERE "pod_name" = \'' + pod_info[0] + '\' \
                             AND "namespace_name" = \'gold\' \
                             AND time > now() - 10m'   
@@ -54,6 +54,8 @@ def ideal_throughput_current():
         avg_mem_usage = sum(list_mem_usage) / len(list_mem_usage)
         avg_req_rate = sum(list_req_rate) / len(list_req_rate)
 
+        print("Average memory usage (normalized): " + str(avg_mem_usage))
+
         basic_ideal_throughput = avg_cpu_p_usage / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) )
 
         mem_ideal_throughput = [ s / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) ) for s in [avg_mem_usage, avg_cpu_p_usage]]
@@ -70,8 +72,8 @@ def ideal_throughput_current():
             },
             "fields": {
                 "basic-throughput": basic_ideal_throughput,
-                "extended-throughput-mem": mem_ideal_throught[0],
-                "extended-throughput-cpu": mem_ideal_throught[1]
+                "extended-throughput-mem": mem_ideal_throughput[0],
+                "extended-throughput-cpu": mem_ideal_throughput[1]
             }
         }]
         influxClient.write_points(json_body)
@@ -80,7 +82,7 @@ def ideal_throughput_current():
         print("Percentage of total: " + str(int(pod_info[1][:-1])/total_cpu_cores))
         print("Req rate: " + str(avg_req_rate))
         print(pod_info[0] + "(" + pod_info[1] + ") : basic: " + str(basic_ideal_throughput))
-        print(pod_info[0] + "(" + pod_info[1] + ") : mem: " + str(basic_ideal_throughput))
-        print(pod_info[0] + "(" + pod_info[1] + ") : cpu: " + str(basic_ideal_throughput))
+        print(pod_info[0] + "(" + pod_info[1] + ") : mem: " + str(mem_ideal_throughput[0]))
+        print(pod_info[0] + "(" + pod_info[1] + ") : cpu: " + str(mem_ideal_throughput[1]))
 
 ideal_throughput_current()
