@@ -56,7 +56,7 @@ def ideal_throughput_current():
 
         basic_ideal_throughput = avg_cpu_p_usage / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) )
 
-        mem_ideal_throughput = [ s / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) for s in [avg_mem_usage, avg_cpu_p_usage]]
+        mem_ideal_throughput = [ s / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) ) for s in [avg_mem_usage, avg_cpu_p_usage]]
 
         influxClient.switch_database("gold-app-data")
 
