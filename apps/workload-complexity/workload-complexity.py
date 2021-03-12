@@ -81,7 +81,7 @@ for pod_info in consumer_pod_list:
                             AND "namespace_name" = \'gold\' \
                             AND time > now() - 1m'   
     mem_query = 'SELECT "pod_name", "value" \
-                    FROM "k8s"."default"."cpu/usage" \
+                    FROM "k8s"."default"."memory/usage" \
                     WHERE "pod_name" = \'' + pod_info[0] + '\' \
                         AND "namespace_name" = \'gold\' \
                         AND time > now() - 1m'   
