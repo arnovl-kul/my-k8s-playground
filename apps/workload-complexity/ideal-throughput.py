@@ -2,12 +2,21 @@ import kubernetes
 from datetime import datetime
 from influxdb import InfluxDBClient
 
+# TODO: Implement memory resource limits in pod definition
+
 INFLUXDB_HOST = '172.19.133.29'
 INFLUXDB_PORT = 30421
+
+# TODO: Implement more 'dynamic' approach
+INFLUX_MEM_DATABASE = "k8s"
+INFLUX_CPU_DATABASE = "k8s"
+INFLUX_RPS_DATABASE = "gold-app-data"
 
 def normalize_list(list_t):
     return [ (s - min(list_t)) / (max(list_t) - min(list_t)) for s in list_t]
 
+
+# Caluculates the ideal throughput based on the current pods in the application
 def ideal_throughput_current():
     influxClient = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT) 
 
@@ -17,6 +26,8 @@ def ideal_throughput_current():
 
     ret = v1.list_namespaced_pod(watch=False, namespace='gold')
 
+    # A list containing al the pods current in the namespace and their CPU value
+    # ex. [[pod-kfjl0 250m], [pod-kfjl1 250m], [pod-kfjl0 500m]]
     consumer_pod_list = [[s.metadata.name, ret.items[0].spec.containers[0].resources.requests['cpu']] for s in ret.items if s.metadata.name.startswith("consumer")]
 
     total_cpu_cores = sum([ int(pod_info[1][:-1]) for pod_info in consumer_pod_list])
@@ -36,17 +47,16 @@ def ideal_throughput_current():
                             FROM "gold-app-data"."autogen"."responseData" \
                             WHERE time > now() - 10m'   
 
-        influxClient.switch_database("k8s")
-
+        influxClient.switch_database(INFLUX_MEM_DATABASE)
         results = influxClient.query(cpu_query)
         list_cpu_usage = [c[2] for c in results.raw['series'][0]['values']]
 
+        influxClient.switch_database(INFLUX_MEM_DATABASE)
         results = influxClient.query(mem_query)
         list_mem_usage = [c[2] for c in results.raw['series'][0]['values']]
         list_mem_usage = normalize_list(list_mem_usage)
 
-        influxClient.switch_database("gold-app-data")
-        
+        influxClient.switch_database(INFLUX_RPS_DATABASE)
         results = influxClient.query(req_rate_query)
         list_req_rate = [c[2] for c in results.raw['series'][0]['values']]
 
@@ -54,12 +64,13 @@ def ideal_throughput_current():
         avg_mem_usage = sum(list_mem_usage) / len(list_mem_usage)
         avg_req_rate = sum(list_req_rate) / len(list_req_rate)
 
-        print("Average memory usage (normalized): " + str(avg_mem_usage))
-
+        # Ideal throughput from the paper
         basic_ideal_throughput = avg_cpu_p_usage / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) )
 
+        # Ideal throughput = [memory_ideal_throughput, cpu_ideal_throughput]
         mem_ideal_throughput = [ s / ( (avg_req_rate * 600) * (int(pod_info[1][:-1]) / total_cpu_cores) ) for s in [avg_mem_usage, avg_cpu_p_usage]]
 
+        # Write into INFLUX database
         influxClient.switch_database("gold-app-data")
 
         time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -82,7 +93,7 @@ def ideal_throughput_current():
         print("Percentage of total: " + str(int(pod_info[1][:-1])/total_cpu_cores))
         print("Req rate: " + str(avg_req_rate))
         print(pod_info[0] + "(" + pod_info[1] + ") : basic: " + str(basic_ideal_throughput))
-        print(pod_info[0] + "(" + pod_info[1] + ") : mem: " + str(mem_ideal_throughput[0]))
-        print(pod_info[0] + "(" + pod_info[1] + ") : cpu: " + str(mem_ideal_throughput[1]))
+        print(pod_info[0] + "(" + pod_info[1] + ") : mem_it: " + str(mem_ideal_throughput[0]))
+        print(pod_info[0] + "(" + pod_info[1] + ") : cpu_it: " + str(mem_ideal_throughput[1]))
 
 ideal_throughput_current()

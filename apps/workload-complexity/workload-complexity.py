@@ -5,6 +5,9 @@ from influxdb import InfluxDBClient
 INFLUXDB_HOST = '172.19.133.29'
 INFLUXDB_PORT = 30421
 
+APPLICATION_DATA_DATABASE = "gold-app-date"
+HEAPSTER_DATABASE = "k8s"
+
 influxClient = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT) 
 
 kubernetes.config.load_kube_config()
@@ -51,7 +54,6 @@ def get_latest_ideal_throughput_mem_cpu(cpu_limit):
     cpu = sum([c[2] for c in results.raw['series'][0]['values']]) / len([c[2] for c in results.raw['series'][0]['values']])
 
     return [mem, cpu]
-        
 
 def get_latest_ideal_throughput_value(cpu_limit):
     it_query = 'SELECT "basic-throughput" \
@@ -61,6 +63,27 @@ def get_latest_ideal_throughput_value(cpu_limit):
     influxClient.switch_database("gold-app-data")
     results = influxClient.query(it_query)
     return sum([c[1] for c in results.raw['series'][0]['values']]) / len([c[1] for c in results.raw['series'][0]['values']])
+
+# Pod name is the name of the pod in the kubernetes platform
+# Time window is the window of the data you want (i.e. 1m, 10m, 1h, ...)
+def get_latest_heapster_data_from_pod(pod_name, metric, namespace_of_pod, time_window):
+    influxClient.switch_database(HEAPSTER_DATABASE)
+    query = 'SELECT "pod_name", "value" \
+                FROM "' + HEAPSTER_DATABASE + '"."default"."' + metric + '"  \
+                WHERE "pod_name" = \'' + pod_name + '\' \
+                    AND "namespace_name" = \'' + namespace_of_pod + '\' \
+                    AND time > now() - ' + time_window
+    results = influxClient.query(query)
+    return results
+
+def get_latest_cpu_data(pod_name, time_window, namespace):
+    results = get_latest_heapster_data_from_pod(pod_name, 'cpu/usage_rate', namespace, time_window)
+    return [c[2] for c in results.raw['series'][0]['values']]
+
+def get_latest_mem_data(pod_name, time_window):
+    results = get_latest_heapster_data_from_pod(pod_name, 'memory/usage', namespace, time_window)
+    return [c[2] for c in results.raw['series'][0]['values']]
+
 
 req_rate_query = 'SELECT "userCount", "rps", "medianRespTime" \
                     FROM "gold-app-data"."autogen"."responseData" \
@@ -75,24 +98,10 @@ avg_req_rate = sum(list_req_rate) / len(list_req_rate)
 influxClient.switch_database("k8s")
 
 for pod_info in consumer_pod_list:
-    cpu_query = 'SELECT "pod_name", "value" \
-                        FROM "k8s"."default"."cpu/usage_rate" \
-                        WHERE "pod_name" = \'' + pod_info[0] + '\' \
-                            AND "namespace_name" = \'gold\' \
-                            AND time > now() - 1m'   
-    mem_query = 'SELECT "pod_name", "value" \
-                    FROM "k8s"."default"."memory/usage" \
-                    WHERE "pod_name" = \'' + pod_info[0] + '\' \
-                        AND "namespace_name" = \'gold\' \
-                        AND time > now() - 1m'   
-
-    results = influxClient.query(cpu_query)
-    list_cpu_usage = [c[2] for c in results.raw['series'][0]['values']]
-
-    results = influxClient.query(mem_query)
-    list_mem_usage = [c[2] for c in results.raw['series'][0]['values']]
+    list_cpu_usage = get_latest_cpu_data(pod_info[0], '1m', 'gold')
+    list_mem_usage = get_latest_mem_data(pod_info[0], '1m', 'gold')
     list_mem_usage = normalize_list(list_mem_usage)
-
+    
     avg_cpu_p_usage = (sum(list_cpu_usage) / len(list_cpu_usage)) / int(pod_info[1][:-1])
     avg_mem_usage = sum(list_mem_usage) / len(list_mem_usage)
 

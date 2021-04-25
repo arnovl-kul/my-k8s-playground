@@ -16,7 +16,7 @@ parser = argparse.ArgumentParser(
 parser.add_argument("-l", "--lhost",    action='store', help="Locust web endpoint")
 parser.add_argument("-i", "--dbip",     action='store', help="IP address of the influx-db")
 parser.add_argument("-p", "--dbport",   action='store', help="Port of influx-db")
-parser.add_argument("-s", "--speed",    action='store', help="Speed at which to collect the metrics")
+parser.add_argument("-s", "--speed",    action='store', help="Speed at which to collect the metrics (metrics/sec)")
 parser.add_argument("-d", "--influxdb", action='store', help="The database in which to store the metrics")
 
 args = parser.parse_args()
