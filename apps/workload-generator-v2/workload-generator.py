@@ -172,10 +172,10 @@ def generate_load():
     last=None
 
     for trace in traces:
-    for _ in range(trace['repeat']):
-        for segment in trace['trace']:
-            process_segment(segment)
-        last=segment['endCount']
+        for _ in range(trace['repeat']):
+            for segment in trace['trace']:
+                process_segment(segment)
+            last=segment['endCount']
 
 
     time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
