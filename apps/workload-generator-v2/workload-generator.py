@@ -63,6 +63,8 @@ def abort_experiment(msg):
     stop_load()
     exit("Program aborted: " + msg)
 
+def file_exists(n):
+    return os.path.isfile(n)
 
 def set_user_count(count):
     url = LOCUST_HOST + "/swarm"
