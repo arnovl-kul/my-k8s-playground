@@ -160,7 +160,7 @@ def generate_load():
 
     traces = config_data['load']
 
-    time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+    time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
     json_body = [{
         "measurement": "userCount",
         "time": time,
@@ -180,7 +180,7 @@ def generate_load():
             last=segment['endCount']
 
 
-    time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+    time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
     json_body = [{
         "measurement": "userCount",
         "time": time,
