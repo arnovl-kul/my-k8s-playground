@@ -1,7 +1,6 @@
 # Author: Arno Van Langendonck
 # Inspired by generator.py by Abel
 # Generates a workload using locust, sends data to INFLUXDB for further analysis
-#
 
 import sys
 import argparse
@@ -71,7 +70,7 @@ def set_user_count(count):
     r = requests.post(url, data={'user_count': count, 'spawn_rate': count})
 
     if (r.status_code == 200):
-        time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+        time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         json_body = [{
             "measurement": "userCount",
             "time": time,
@@ -80,7 +79,6 @@ def set_user_count(count):
             }
         }]
         client.write_points(json_body)
-
 
 def check_params(segment_type, initial_count, end_count, duration):
 
@@ -115,7 +113,6 @@ def check_params(segment_type, initial_count, end_count, duration):
     else:
         abort('Invalidad segment type. Options are: stable, rising, decreasing')
 
-
 def process_segment(trace):
     segment_type = trace['segment']
     initial_count = trace['initialCount']
@@ -146,7 +143,6 @@ def process_segment(trace):
             time.sleep(delay)
         # set_user_count(end_count)
 
-
 def generate_load():
     if(file_exists(CONFIG_FILE)):
         try:
@@ -170,7 +166,6 @@ def generate_load():
     }]
     client.write_points(json_body)
 
-
     last=None
 
     for trace in traces:
@@ -178,7 +173,6 @@ def generate_load():
             for segment in trace['trace']:
                 process_segment(segment)
             last=segment['endCount']
-
 
     time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
     json_body = [{
@@ -191,7 +185,6 @@ def generate_load():
     client.write_points(json_body)
     
     stop_load()			
-
 
 if(COMMAND=='start'):
     generate_load()
