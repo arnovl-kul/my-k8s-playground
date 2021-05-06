@@ -170,7 +170,7 @@ def generate_load():
         }
     }]
     if DEBUG:
-        print("writing: t=" + time + " c=" + str(count))
+        print("writing: t=" + time + " c=" + str(0))
     client.write_points(json_body)
 
     last=None
@@ -190,7 +190,7 @@ def generate_load():
         }
     }]
     if DEBUG:
-        print("writing: t=" + time + " c=" + str(count))
+        print("writing: t=" + time + " c=" + str(0))
     client.write_points(json_body)
     
     stop_load()			
