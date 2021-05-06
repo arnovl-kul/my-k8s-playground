@@ -191,8 +191,8 @@ def generate_load():
     stop_load()			
 
 
-if(command=='start'):
+if(COMMAND=='start'):
 	generate_load()
 
-elif(command=='stop'):
+elif(COMMAND=='stop'):
 	stop_load()
