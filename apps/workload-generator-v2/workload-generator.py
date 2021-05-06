@@ -44,6 +44,7 @@ CONFIG_FILE = args.file
 LOCUST_HOST = args.lhost
 INFLUXDB_HOST = args.dbip
 INFLUXDB_PORT = args.dbport
+DEBUG = True
 
 # Test connection to influxdb
 client = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT, timeout=5)
@@ -52,6 +53,7 @@ try:
     v = client.ping()
 except:
     exit("Problem with connection to Influxdb, check ip and port, aborting")
+print("Connection established")
 client.switch_database("gold-app-data")
 
 
@@ -78,6 +80,9 @@ def set_user_count(count):
                 "userCount": count
             }
         }]
+
+        if DEBUG:
+            print("writing: t=" + time + " c=" + str(count))
         client.write_points(json_body)
 
 def check_params(segment_type, initial_count, end_count, duration):
@@ -164,6 +169,8 @@ def generate_load():
             "userCount": 0
         }
     }]
+    if DEBUG:
+        print("writing: t=" + time + " c=" + str(count))
     client.write_points(json_body)
 
     last=None
@@ -182,6 +189,8 @@ def generate_load():
             "userCount": 0
         }
     }]
+    if DEBUG:
+        print("writing: t=" + time + " c=" + str(count))
     client.write_points(json_body)
     
     stop_load()			
