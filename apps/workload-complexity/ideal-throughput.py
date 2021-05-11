@@ -13,15 +13,12 @@ INFLUX_CPU_DATABASE = "k8s"
 INFLUX_RPS_DATABASE = "gold-app-data"
 
 def normalize_list(list_t):
-    return [ (s - min(list_t)) / (max(list_t) - min(list_t)) for s in list_t]
-
+    return [(s - min(list_t)) / (max(list_t) - min(list_t)) for s in list_t]
 
 # Caluculates the ideal throughput based on the current pods in the application
 def ideal_throughput_current():
     influxClient = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT) 
-
     kubernetes.config.load_kube_config()
-
     v1 = kubernetes.client.CoreV1Api()
 
     ret = v1.list_namespaced_pod(watch=False, namespace='gold')
@@ -47,14 +44,14 @@ def ideal_throughput_current():
                             FROM "gold-app-data"."autogen"."responseData" \
                             WHERE time > now() - 10m'   
 
-        influxClient.switch_database(INFLUX_MEM_DATABASE)
+        influxClient.switch_database(INFLUX_CPU_DATABASE)
         results = influxClient.query(cpu_query)
         list_cpu_usage = [c[2] for c in results.raw['series'][0]['values']]
 
         influxClient.switch_database(INFLUX_MEM_DATABASE)
         results = influxClient.query(mem_query)
         list_mem_usage = [c[2] for c in results.raw['series'][0]['values']]
-        list_mem_usage = normalize_list(list_mem_usage)
+        list_mem_usage = normalize_list(list_mem_usage) # Should update to memory
 
         influxClient.switch_database(INFLUX_RPS_DATABASE)
         results = influxClient.query(req_rate_query)
