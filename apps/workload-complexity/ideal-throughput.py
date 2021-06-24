@@ -2,6 +2,8 @@ import kubernetes
 from datetime import datetime
 from influxdb import InfluxDBClient
 
+DEBUG = True
+
 # TODO: Implement memory resource limits in pod definition
 
 INFLUXDB_HOST = '172.19.133.29'
@@ -48,6 +50,9 @@ def ideal_throughput_current():
         results = influxClient.query(cpu_query)
         list_cpu_usage = [c[2] for c in results.raw['series'][0]['values']]
 
+        if DEBUG:
+            print(list_cpu_usage)
+
         influxClient.switch_database(INFLUX_MEM_DATABASE)
         results = influxClient.query(mem_query)
         list_mem_usage = [c[2] for c in results.raw['series'][0]['values']]
@@ -56,6 +61,9 @@ def ideal_throughput_current():
         influxClient.switch_database(INFLUX_RPS_DATABASE)
         results = influxClient.query(req_rate_query)
         list_req_rate = [c[2] for c in results.raw['series'][0]['values']]
+
+        if DEBUG:
+            print(list_cpu_usage)
 
         avg_cpu_p_usage = (sum(list_cpu_usage) / len(list_cpu_usage)) / int(pod_info[1][:-1])
         avg_mem_usage = sum(list_mem_usage) / len(list_mem_usage)
