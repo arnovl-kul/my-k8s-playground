@@ -26,6 +26,7 @@ class TasksetT1(TaskSet):
 
 class MyUser(HttpUser):
     weight = 1
+    host = APPLICATION_HOST
     wait_time = between(0,0)  
     tasks = [TasksetT1]
     sock = socket.socket() # -> graphite
