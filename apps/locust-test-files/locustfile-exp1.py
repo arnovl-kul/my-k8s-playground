@@ -30,8 +30,8 @@ class MyUser(HttpUser):
     tasks = [TasksetT1]
     sock = socket.socket() # -> graphite
 
-    self.idb = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT, timeout=5)
-    self.idb.switch_database(DATABASE)
+    idb = InfluxDBClient(host=INFLUXDB_HOST, port=INFLUXDB_PORT, timeout=5)
+    idb.switch_database(DATABASE)
 
     if DEBUG:
         print("Checking connection to influxdb... wait max 15 seconds")
@@ -58,7 +58,7 @@ class MyUser(HttpUser):
                 "response_time": t
             }
         }]
-        self.idb.write_points(json_body)
+        MyUser.idb.write_points(json_body)
 
     def hook_request_fail(self, request_type, name, response_time, exception):
         if DEBUG:
@@ -67,4 +67,4 @@ class MyUser(HttpUser):
     
     @events.test_stop.add_listener
     def exit_handler(**kw):
-        self.idb.close()
+        MyUser.idb.close()
