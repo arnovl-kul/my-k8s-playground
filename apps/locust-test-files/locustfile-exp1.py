@@ -2,6 +2,8 @@ from locust import HttpUser, TaskSet, task, between, events, web
 import time
 import socket
 import atexit
+from influxdb import InfluxDBClient
+from datetime import datetime
 
 DEBUG = True
 APPLICATION_HOST = "http://172.19.133.29:30698"
