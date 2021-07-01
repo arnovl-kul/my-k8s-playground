@@ -48,12 +48,12 @@ class MyUser(HttpUser):
         if DEBUG:
             print(str(time.time()) + " - reqType: " + str(request_type) + ", name: " + str(name) + ", respTime: " + str(response_time) + ", respLength: " + str(response_length))
         if str(name) == 'gold':
-            time = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
+            ti = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
             json_body = [{
                 "measurement": "response_time",
-                "time": time,
+                "time": ti,
                 "fields": {
-                    "response_time": t
+                    "response_time": response_time
                 }
             }]
             MyUser.idb.write_points(json_body)
