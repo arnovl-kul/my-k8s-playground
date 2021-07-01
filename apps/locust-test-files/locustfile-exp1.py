@@ -36,7 +36,7 @@ class MyUser(HttpUser):
     if DEBUG:
         print("Checking connection to influxdb... wait max 15 seconds")
     try:
-        v = self.client.ping()
+        v = idb.ping()
         if DEBUG:
             print('Succesfully pinged InfluxDB')
     except:
