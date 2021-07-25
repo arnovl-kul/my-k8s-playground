@@ -45,15 +45,15 @@ class MyUser(HttpUser):
 
     @events.request_success.add_listener
     def hook_request_success(request_type, name, response_time, response_length, **kw):
+        ti = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
         if DEBUG:
-            print(str(time.time()) + " - reqType: " + str(request_type) + ", name: " + str(name) + ", respTime: " + str(response_time) + ", respLength: " + str(response_length))
+            print(str(ti) + " - reqType: " + str(request_type) + ", name: " + str(name) + ", respTime: " + str(response_time) + ", respLength: " + str(response_length))
         if str(name) == 'gold':
-            ti = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ"),
             json_body = [{
                 "measurement": "response_time",
                 "time": ti,
                 "fields": {
-                    "response_time": response_time
+                    "response_time": float(response_time)
                 }
             }]
             MyUser.idb.write_points(json_body)
