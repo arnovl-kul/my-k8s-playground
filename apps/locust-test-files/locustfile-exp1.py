@@ -49,6 +49,7 @@ class MyUser(HttpUser):
         if DEBUG:
             print(str(ti) + " - reqType: " + str(request_type) + ", name: " + str(name) + ", respTime: " + str(response_time) + ", respLength: " + str(response_length))
         if str(name) == 'gold':
+            ti = datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
             json_body = [{
                 "measurement": "response_time",
                 "time": ti,

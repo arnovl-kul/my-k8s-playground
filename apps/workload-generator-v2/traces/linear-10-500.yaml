@@ -1,0 +1,47 @@
+load:
+  - trace:
+    - segment: stable
+      initialCount: 0
+      endCount: 0
+      duration: 20 
+    - segment: stable
+      initialCount: 10
+      endCount: 10
+      duration: 120
+    - segment: stable
+      initialCount: 11
+      endCount: 11
+      duration: 500
+    - segment: stable
+      initialCount: 12
+      endCount: 12
+      duration: 500
+    - segment: stable
+      initialCount: 13
+      endCount: 13
+      duration: 500
+    - segment: stable
+      initialCount: 13
+      endCount: 13
+      duration: 500
+    - segment: stable
+      initialCount: 14
+      endCount: 14
+      duration: 500
+    - segment: stable
+      initialCount: 15
+      endCount: 15
+      duration: 500
+    - segment: stable
+      initialCount: 16
+      endCount: 16
+      duration: 500
+    - segment: stable
+      initialCount: 15
+      endCount: 15
+      duration: 500
+    - segment: stable
+      initialCount: 14
+      endCount: 14
+      duration: 500
+    repeat: 1
